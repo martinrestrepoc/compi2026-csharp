@@ -3,6 +3,8 @@ namespace frances;
 // Enum con todos los tipos de token que puede producir el lexer.
 public enum TokenType
 {
+    // Operadores aritmeticos
+    Division,
     Assign,
     Comma,
     Dif,
@@ -17,13 +19,27 @@ public enum TokenType
     Pow,
     Multiply,
     Mod,
+
+    // Operadores logicos y booleanos
+    And,
+    Or,
+
+    // Delimitadores
     LParen,
+    RParen,
     LBrace,
     RBrace,
     Semicolon,
+
+    // Literales
     Identifier,
     Integer,
+    Float,
     String,
+    True,
+    False,
+
+    // Keywords
     Function,
     Let,
     If,
@@ -34,6 +50,9 @@ public enum TokenType
     Return,
     Break,
     Continue,
+    Print,
+
+    // Especiales
     Eof,
     Illegal
 }

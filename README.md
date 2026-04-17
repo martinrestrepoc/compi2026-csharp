@@ -2,7 +2,7 @@
 
 `frances` es una implementacion en C# de un lexer con REPL interactivo.
 
-El objetivo del proyecto es leer una linea de codigo fuente, recorrerla caracter por caracter, convertirla en tokens y mostrarlos en consola.
+El objetivo del proyecto es leer una linea de codigo fuente, recorrerla caracter por caracter, convertirla en tokens y mostrarlos en consola. El proyecto replica el flujo del lexer base de `compi2026`, pero adaptado a C# y ampliado con mas tipos de tokens.
 
 ## Objetivo del proyecto
 
@@ -10,6 +10,8 @@ Este proyecto busca:
 
 - Mostrar de manera clara como se hace el analisis lexico.
 - Servir como base para extender el lenguaje `frances`.
+- Permitir pruebas rapidas desde consola con un REPL sencillo.
+- Tener una implementacion legible para estudiar compiladores.
 
 ## Flujo general
 
@@ -116,6 +118,20 @@ Type Dif, Literal !=
 Type Integer, Literal 20
 ```
 
+Otro ejemplo con keywords, flotantes y strings:
+
+```txt
+>>print true and false or break 3.14 "hola"
+Type Print, Literal print
+Type True, Literal true
+Type And, Literal and
+Type False, Literal false
+Type Or, Literal or
+Type Break, Literal break
+Type Float, Literal 3.14
+Type String, Literal hola
+```
+
 ## Tokens reconocidos actualmente
 
 El lexer ya reconoce las siguientes categorias:
@@ -125,8 +141,10 @@ El lexer ya reconoce las siguientes categorias:
 - `+` -> `Plus`
 - `-` -> `Minus`
 - `*` -> `Multiply`
+- `/` -> `Division`
 - `%` -> `Mod`
 - `^` -> `Pow`
+- `<` -> `Lt`
 - `>` -> `Gt`
 - `=` -> `Assign`
 - `!` -> `Negation`
@@ -135,11 +153,31 @@ El lexer ya reconoce las siguientes categorias:
 
 - `==` -> `Eq`
 - `!=` -> `Dif`
+- `<=` -> `Lte`
+- `>=` -> `Gte`
+
+### Operadores logicos y booleanos
+
+- `and` -> `And`
+- `or` -> `Or`
+- `true` -> `True`
+- `false` -> `False`
+
+### Delimitadores
+
+- `,` -> `Comma`
+- `;` -> `Semicolon`
+- `(` -> `LParen`
+- `)` -> `RParen`
+- `{` -> `LBrace`
+- `}` -> `RBrace`
 
 ### Literales
 
 - Enteros, por ejemplo: `10`, `25`, `300`
-- Identificadores alfabeticos, por ejemplo: `x`, `valor`, `resultado`
+- Flotantes, por ejemplo: `3.14`, `20.5`
+- Strings entre comillas dobles, por ejemplo: `"hola"`
+- Identificadores alfanumericos con guion bajo, por ejemplo: `x`, `valor`, `mi_variable1`
 
 ### Palabras reservadas
 
@@ -151,7 +189,9 @@ El lexer ya reconoce las siguientes categorias:
 - `elseif`
 - `while`
 - `return`
+- `break`
 - `continue`
+- `print`
 
 ### Tokens especiales
 
@@ -169,16 +209,33 @@ La clase `Lexer` mantiene cuatro piezas principales de estado:
 
 Con ese estado, el lexer hace lo siguiente:
 
-1. Ignora espacios en blanco con `SkipWhiteSpaces()`.
+1. Ignora espacios en blanco y comentarios de linea con `SkipWhiteSpacesAndComments()`.
 2. Observa el caracter actual.
 3. Decide si corresponde a:
    - un operador de un caracter,
    - un operador de dos caracteres,
-   - un numero,
+   - un numero entero o flotante,
+   - un string,
    - un identificador o keyword,
    - o un simbolo ilegal.
 4. Crea el token correspondiente.
 5. Avanza para preparar la siguiente lectura.
+
+## Comentarios soportados
+
+El lexer ignora comentarios de una sola linea que empiecen con `//`.
+
+Ejemplo:
+
+```txt
+let x = 5; // esto no se tokeniza
+```
+
+En ese caso, solo se generan tokens para:
+
+```txt
+let x = 5;
+```
 
 ## Como funciona el REPL
 
@@ -192,13 +249,29 @@ La clase `Repl` implementa el ciclo interactivo del programa:
 
 Esto permite probar el lexer inmediatamente sin archivos intermedios.
 
+## Pruebas
+
+El proyecto tiene pruebas unitarias en `compi2026-csharp.Tests`, enfocadas en:
+
+- operadores aritmeticos simples
+- expresiones aritmeticas
+- keywords y operadores de comparacion
+- delimitadores
+- strings
+- flotantes
+- comentarios de linea
+
+Para ejecutarlas desde la carpeta padre:
+
+```bash
+dotnet test compi2026-csharp.Tests/compi2026-csharp.Tests.csproj
+```
+
 ## Limitaciones actuales
 
 En su estado actual, el lexer esta pensado como una base inicial, por lo que todavia tiene estas limitaciones:
 
-- solo reconoce identificadores compuestos por letras
-- no reconoce numeros decimales
-- no procesa strings
-- no maneja parentesis, llaves, comas o punto y coma en la implementacion del lexer aunque esos tipos existan en `TokenType`
-- no distingue operadores como `>=`, `<=` o `<`
 - no incluye parser ni evaluador
+- no maneja escapes dentro de strings como `\"` o `\n`
+- no soporta comentarios multilínea
+- no valida errores lexicos con mensajes detallados por linea y columna

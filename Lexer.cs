@@ -26,8 +26,8 @@ public sealed class Lexer
     // Devuelve el siguiente token reconocido en la entrada.
     public Token NextToken()
     {
-        // Ignora espacios, tabs y saltos de linea antes de tokenizar.
-        SkipWhiteSpaces();
+        // Ignora espacios, tabs, saltos de linea y comentarios simples.
+        SkipWhiteSpacesAndComments();
 
         Token token;
 
@@ -43,8 +43,10 @@ public sealed class Lexer
         }
         else if (_character == ">")
         {
-            // Operador mayor que.
-            token = new Token(TokenType.Gt, _character);
+            // Operador mayor que o mayor o igual que.
+            token = PeekCharacter() == "="
+                ? MakeTwoCharacterToken(TokenType.Gte)
+                : new Token(TokenType.Gt, _character);
         }
         else if (_character == "-")
         {
@@ -60,6 +62,11 @@ public sealed class Lexer
         {
             // Operador multiplicacion.
             token = new Token(TokenType.Multiply, _character);
+        }
+        else if (_character == "/")
+        {
+            // Operador division. Los comentarios // se saltan antes.
+            token = new Token(TokenType.Division, _character);
         }
         else if (_character == "%")
         {
@@ -86,16 +93,65 @@ public sealed class Lexer
             // Operador de asignacion.
             token = new Token(TokenType.Assign, _character);
         }
+        else if (_character == "<" && PeekCharacter() == "=")
+        {
+            // Operador menor o igual que: <=
+            token = MakeTwoCharacterToken(TokenType.Lte);
+        }
+        else if (_character == "<")
+        {
+            // Operador menor que.
+            token = new Token(TokenType.Lt, _character);
+        }
+        else if (_character == ",")
+        {
+            // Separador de argumentos o elementos.
+            token = new Token(TokenType.Comma, _character);
+        }
+        else if (_character == ";")
+        {
+            // Delimitador de fin de sentencia.
+            token = new Token(TokenType.Semicolon, _character);
+        }
+        else if (_character == "(")
+        {
+            // Parentesis de apertura.
+            token = new Token(TokenType.LParen, _character);
+        }
+        else if (_character == ")")
+        {
+            // Parentesis de cierre.
+            token = new Token(TokenType.RParen, _character);
+        }
+        else if (_character == "{")
+        {
+            // Llave de apertura.
+            token = new Token(TokenType.LBrace, _character);
+        }
+        else if (_character == "}")
+        {
+            // Llave de cierre.
+            token = new Token(TokenType.RBrace, _character);
+        }
+        else if (_character == "\"")
+        {
+            // Cadena encerrada entre comillas dobles.
+            token = new Token(TokenType.String, ReadString());
+            return token;
+        }
         else if (IsLetter(_character))
         {
-            // Si empieza con letra, puede ser identificador o keyword.
+            // Si empieza con letra o _, puede ser identificador o keyword.
             var literal = ReadIdentifier();
             token = new Token(TokenLookup.LookupTokenType(literal), literal);
+            return token;
         }
         else if (IsDigit(_character))
         {
-            // Si empieza con digito, consume el numero completo.
-            token = new Token(TokenType.Integer, ReadNumber());
+            // Si empieza con digito, consume entero o flotante.
+            var (literal, tokenType) = ReadNumber();
+            token = new Token(tokenType, literal);
+            return token;
         }
         else
         {
@@ -109,11 +165,25 @@ public sealed class Lexer
     }
 
     // Consume todos los espacios en blanco consecutivos.
-    private void SkipWhiteSpaces()
+    private void SkipWhiteSpacesAndComments()
     {
-        while (!string.IsNullOrEmpty(_character) && char.IsWhiteSpace(_character[0]))
+        while (true)
         {
-            ReadCharacter();
+            if (!string.IsNullOrEmpty(_character) && char.IsWhiteSpace(_character[0]))
+            {
+                ReadCharacter();
+            }
+            else if (_character == "/" && PeekCharacter() == "/")
+            {
+                while (!string.IsNullOrEmpty(_character) && _character != "\n")
+                {
+                    ReadCharacter();
+                }
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
@@ -133,8 +203,8 @@ public sealed class Lexer
         _readPosition += 1;
     }
 
-    // Lee un literal numerico continuo.
-    private string ReadNumber()
+    // Lee un literal numerico continuo, entero o decimal.
+    private (string Literal, TokenType TokenType) ReadNumber()
     {
         var start = _position;
         while (IsDigit(_character))
@@ -142,19 +212,48 @@ public sealed class Lexer
             ReadCharacter();
         }
 
-        return _source[start.._position];
+        var tokenType = TokenType.Integer;
+
+        if (_character == "." && IsDigit(PeekCharacter()))
+        {
+            tokenType = TokenType.Float;
+            ReadCharacter();
+
+            while (IsDigit(_character))
+            {
+                ReadCharacter();
+            }
+        }
+
+        return (_source[start.._position], tokenType);
     }
 
-    // Lee un identificador o palabra reservada compuesto por letras.
+    // Lee un identificador o palabra reservada compuesto por letras, numeros o _.
     private string ReadIdentifier()
     {
         var start = _position;
-        while (IsLetter(_character))
+        while (IsLetter(_character) || IsDigit(_character))
         {
             ReadCharacter();
         }
 
         return _source[start.._position];
+    }
+
+    // Lee el contenido de una cadena entre comillas dobles.
+    private string ReadString()
+    {
+        var start = _position + 1;
+
+        do
+        {
+            ReadCharacter();
+        }
+        while (!string.IsNullOrEmpty(_character) && _character != "\"");
+
+        var literal = _source[start.._position];
+        ReadCharacter();
+        return literal;
     }
 
     // Mira el siguiente caracter sin consumirlo.
@@ -177,7 +276,7 @@ public sealed class Lexer
     // Verifica si el caracter actual puede iniciar o continuar un identificador.
     private static bool IsLetter(string character)
     {
-        return !string.IsNullOrEmpty(character) && char.IsLetter(character[0]);
+        return !string.IsNullOrEmpty(character) && (char.IsLetter(character[0]) || character[0] == '_');
     }
 
     // Verifica si el caracter actual es un digito.

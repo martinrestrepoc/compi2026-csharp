@@ -15,7 +15,13 @@ public static class TokenLookup
         ["elseif"] = TokenType.ElseIf,
         ["while"] = TokenType.While,
         ["return"] = TokenType.Return,
-        ["continue"] = TokenType.Continue
+        ["break"] = TokenType.Break,
+        ["continue"] = TokenType.Continue,
+        ["true"] = TokenType.True,
+        ["false"] = TokenType.False,
+        ["and"] = TokenType.And,
+        ["or"] = TokenType.Or,
+        ["print"] = TokenType.Print
     };
 
     // Devuelve el tipo reservado si existe; si no, Identifier.
@@ -32,4 +38,3 @@ public static class TokenLookup
         }
     }
 }
-
