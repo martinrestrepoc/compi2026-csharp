@@ -266,12 +266,3 @@ Para ejecutarlas desde la carpeta padre:
 ```bash
 dotnet test compi2026-csharp.Tests/compi2026-csharp.Tests.csproj
 ```
-
-## Limitaciones actuales
-
-En su estado actual, el lexer esta pensado como una base inicial, por lo que todavia tiene estas limitaciones:
-
-- no incluye parser ni evaluador
-- no maneja escapes dentro de strings como `\"` o `\n`
-- no soporta comentarios multilínea
-- no valida errores lexicos con mensajes detallados por linea y columna
