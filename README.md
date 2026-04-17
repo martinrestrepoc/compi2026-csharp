@@ -248,21 +248,3 @@ La clase `Repl` implementa el ciclo interactivo del programa:
 - imprime cada token hasta encontrar `Eof`
 
 Esto permite probar el lexer inmediatamente sin archivos intermedios.
-
-## Pruebas
-
-El proyecto tiene pruebas unitarias en `compi2026-csharp.Tests`, enfocadas en:
-
-- operadores aritmeticos simples
-- expresiones aritmeticas
-- keywords y operadores de comparacion
-- delimitadores
-- strings
-- flotantes
-- comentarios de linea
-
-Para ejecutarlas desde la carpeta padre:
-
-```bash
-dotnet test compi2026-csharp.Tests/compi2026-csharp.Tests.csproj
-```
