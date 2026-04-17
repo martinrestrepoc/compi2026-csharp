@@ -44,9 +44,14 @@ public sealed class Lexer
         else if (_character == ">")
         {
             // Operador mayor que o mayor o igual que.
-            token = PeekCharacter() == "="
-                ? MakeTwoCharacterToken(TokenType.Gte)
-                : new Token(TokenType.Gt, _character);
+            if (PeekCharacter() == "=")
+            {
+                token = MakeTwoCharacterToken(TokenType.Gte);
+            }
+            else
+            {
+                token = new Token(TokenType.Gt, _character);
+            }
         }
         else if (_character == "-")
         {
@@ -236,7 +241,7 @@ public sealed class Lexer
         {
             ReadCharacter();
         }
-
+        // toma de start hasta _position, sin incluir _position, el texto que forma el identificador o keyword
         return _source[start.._position];
     }
 
@@ -259,12 +264,15 @@ public sealed class Lexer
     // Mira el siguiente caracter sin consumirlo.
     private string PeekCharacter()
     {
-        return _readPosition >= _source.Length
-            ? string.Empty
-            : _source[_readPosition].ToString();
+        if (_readPosition >= _source.Length)
+        {
+            return string.Empty;
+        }
+
+        return _source[_readPosition].ToString();
     }
 
-    // Construye tokens de dos caracteres, por ejemplo == o !=.
+    // Construye tokens de dos caracteres.
     private Token MakeTwoCharacterToken(TokenType tokenType)
     {
         var prefix = _character;
