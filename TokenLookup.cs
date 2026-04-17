@@ -21,8 +21,15 @@ public static class TokenLookup
     // Devuelve el tipo reservado si existe; si no, Identifier.
     public static TokenType LookupTokenType(string literal)
     {
-        return Keywords.TryGetValue(literal, out var tokenType)
-            ? tokenType
-            : TokenType.Identifier;
+        // out indica que el parametro no entra con un valor, sino que el metodo lo va a retornar 
+        if (Keywords.TryGetValue(literal, out var tokenType))
+        {
+            return tokenType;
+        }
+        else
+        {
+            return TokenType.Identifier;
+        }
     }
 }
+
