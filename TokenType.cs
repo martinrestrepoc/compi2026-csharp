@@ -2,9 +2,8 @@ namespace frances;
 
 // Enum con todos los tipos de token que puede producir el lexer.
 //
-// Los nombres se mantienen en MAYUSCULAS para seguir el estilo del
-// interprete Python original y dejar una convencion estable para las
-// siguientes etapas: parser, AST, evaluator y sistema de objetos.
+// Los nombres se mantienen en MAYUSCULAS para dejar una convencion estable
+// entre lexer, parser, AST, evaluator y sistema de objetos.
 public enum TokenType
 {
     // Operadores aritmeticos

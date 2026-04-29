@@ -24,17 +24,14 @@ public static class TokenLookup
         ["print"] = TokenType.PRINT
     };
 
-    // Devuelve el tipo reservado si existe; si no, Identifier.
+    // Devuelve el tipo reservado si existe; si no, IDENTIFIER.
     public static TokenType LookupTokenType(string literal)
     {
-        // out indica que el parametro no entra con un valor, sino que el metodo lo va a retornar 
         if (Keywords.TryGetValue(literal, out var tokenType))
         {
             return tokenType;
         }
-        else
-        {
-            return TokenType.IDENTIFIER;
-        }
+
+        return TokenType.IDENTIFIER;
     }
 }

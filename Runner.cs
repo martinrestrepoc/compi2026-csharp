@@ -13,7 +13,8 @@ namespace frances;
 
 public static class Runner
 {
-    // Lee y ejecuta un archivo fuente. La extension recomendada del lenguaje es .hdp.
+    // Lee y ejecuta un archivo fuente desde disco. La extension recomendada
+    // del lenguaje es .hdp, aunque el interprete solo necesita texto valido.
     public static int RunFile(string filepath)
     {
         if (!File.Exists(filepath))
@@ -30,6 +31,10 @@ public static class Runner
     }
 
     // Ejecuta codigo fuente usando el Environment recibido.
+    //
+    // Este metodo es el punto comun entre ejecucion por archivo y REPL:
+    // crea lexer, parser y AST, reporta errores de parseo, evalua el programa
+    // y opcionalmente imprime el resultado final cuando no es null.
     public static RuntimeObject RunSource(string source, Environment env, bool printFinalResult)
     {
         var lexer = new Lexer(source);

@@ -1,6 +1,6 @@
 # frances
 
-`frances` es una implementacion en C# de un interprete educativo para el lenguaje trabajado en `compi2026`.
+`frances` es una implementacion en C# de un interprete educativo.
 
 El interprete ejecuta codigo fuente con extension recomendada `.hdp`. El flujo completo es:
 
@@ -13,11 +13,9 @@ codigo fuente .hdp
   -> resultado / salida / error
 ```
 
-La implementacion busca paridad con el interprete Python de `compi2026/laurasefue`, manteniendo nombres internos claros y comentarios en espanol para estudiar cada etapa.
+La implementacion mantiene nombres internos claros y comentarios en espanol para estudiar cada etapa del interprete.
 
 ## Estado actual
-
-El proyecto ya incluye:
 
 - Lexer completo.
 - Parser Pratt con precedencia de operadores.
@@ -44,29 +42,24 @@ dotnet --version
 
 ## Como ejecutar
 
-Desde la carpeta padre `compiladores`, iniciar el REPL:
+Todos los comandos de esta seccion se ejecutan desde la raiz del repo clonado.
+
+Iniciar el REPL:
 
 ```bash
-dotnet run --project compi2026-csharp
+dotnet run
 ```
 
 Ejecutar un archivo `.hdp`:
 
 ```bash
-dotnet run --project compi2026-csharp -- compi2026-csharp/examples/test_script.hdp
+dotnet run -- examples/test_script.hdp
 ```
 
 Ejecutar el ejemplo completo:
 
 ```bash
-dotnet run --project compi2026-csharp -- compi2026-csharp/examples/final.hdp
-```
-
-Tambien puedes entrar a la carpeta del proyecto y usar rutas relativas:
-
-```bash
-cd compi2026-csharp
-dotnet run -- examples/test_script.hdp
+dotnet run -- examples/final.hdp
 ```
 
 ## REPL
@@ -389,7 +382,33 @@ Estos directorios se regeneran automaticamente con:
 
 ```bash
 dotnet build
-dotnet test
 dotnet run
 ```
 
+## Verificacion local
+
+Desde la raiz del repo puedes verificar que el proyecto compila con:
+
+```bash
+dotnet build
+```
+
+Tambien puedes validar el flujo completo ejecutando:
+
+```bash
+dotnet run -- examples/test_script.hdp
+dotnet run -- examples/final.hdp
+```
+
+Salida esperada de `examples/test_script.hdp`:
+
+```txt
+El resultado es:
+50
+```
+
+El ejemplo `examples/final.hdp` debe terminar imprimiendo:
+
+```txt
+true
+```

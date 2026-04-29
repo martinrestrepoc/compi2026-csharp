@@ -32,7 +32,8 @@ public static class Repl
         }
     }
 
-    // Lee lineas adicionales cuando hay llaves abiertas.
+    // Lee lineas adicionales cuando hay llaves abiertas para permitir bloques
+    // como if, while, for y function escritos en varias lineas.
     private static string ReadMultilineSource(string source)
     {
         var openBraces = Count(source, '{') - Count(source, '}');
@@ -53,11 +54,13 @@ public static class Repl
         return source;
     }
 
+    // Cuenta ocurrencias de un caracter dentro de una entrada del REPL.
     private static int Count(string source, char target)
     {
         return source.Count(character => character == target);
     }
 
+    // Muestra los comandos especiales y ejemplos minimos del REPL.
     private static void PrintHelp()
     {
         Console.WriteLine("Comandos:");
