@@ -1,19 +1,18 @@
 namespace frances;
 
-// El REPL lee una linea del usuario, la tokeniza y muestra
-// cada token hasta que se alcance el fin de entrada.
+// El REPL lee codigo del usuario, lo parsea y lo evalua.
+// El Environment se conserva entre entradas para que las variables sigan vivas.
 public static class Repl
 {
-    // Token de referencia para detectar el fin del analisis.
-    private static readonly Token EofToken = new(TokenType.EOF, string.Empty);
-
     // Inicia el ciclo interactivo del lenguaje.
     public static void Start()
     {
+        var env = new Environment();
+
         while (true)
         {
             // Prompt de entrada.
-            Console.Write(">>");
+            Console.Write(">> ");
             var source = Console.ReadLine();
 
             // Permite salir escribiendo salir() o cerrando la entrada.
@@ -22,20 +21,53 @@ public static class Repl
                 break;
             }
 
-            // Crea un lexer nuevo por cada linea ingresada.
-            var lexer = new Lexer(source);
-            Token token;
-
-            do
+            if (source == "ayuda()")
             {
-                // Obtiene e imprime los tokens generados.
-                token = lexer.NextToken();
-                if (token != EofToken)
-                {
-                    Console.WriteLine(token);
-                }
+                PrintHelp();
+                continue;
             }
-            while (token != EofToken);
+
+            source = ReadMultilineSource(source);
+            Runner.RunSource(source, env, printFinalResult: true);
         }
+    }
+
+    // Lee lineas adicionales cuando hay llaves abiertas.
+    private static string ReadMultilineSource(string source)
+    {
+        var openBraces = Count(source, '{') - Count(source, '}');
+
+        while (openBraces > 0)
+        {
+            Console.Write(".. ");
+            var nextLine = Console.ReadLine();
+            if (nextLine is null)
+            {
+                break;
+            }
+
+            source += System.Environment.NewLine + nextLine;
+            openBraces += Count(nextLine, '{') - Count(nextLine, '}');
+        }
+
+        return source;
+    }
+
+    private static int Count(string source, char target)
+    {
+        return source.Count(character => character == target);
+    }
+
+    private static void PrintHelp()
+    {
+        Console.WriteLine("Comandos:");
+        Console.WriteLine("  salir()  termina el REPL");
+        Console.WriteLine("  ayuda()  muestra esta ayuda");
+        Console.WriteLine();
+        Console.WriteLine("Ejemplos:");
+        Console.WriteLine("  let x = 10;");
+        Console.WriteLine("  print(x * 2);");
+        Console.WriteLine("  let doble = function(n) { return n * 2; };");
+        Console.WriteLine("  doble(5);");
     }
 }

@@ -1,250 +1,395 @@
 # frances
 
-`frances` es una implementacion en C# de un lexer con REPL interactivo.
+`frances` es una implementacion en C# de un interprete educativo para el lenguaje trabajado en `compi2026`.
 
-El objetivo del proyecto es leer una linea de codigo fuente, recorrerla caracter por caracter, convertirla en tokens y mostrarlos en consola. El proyecto replica el flujo del lexer base de `compi2026`, pero adaptado a C# y ampliado con mas tipos de tokens.
+El interprete ejecuta codigo fuente con extension recomendada `.hdp`. El flujo completo es:
 
-## Objetivo del proyecto
+```txt
+codigo fuente .hdp
+  -> Lexer
+  -> Parser
+  -> AST
+  -> Evaluator
+  -> resultado / salida / error
+```
 
-Este proyecto busca:
+La implementacion busca paridad con el interprete Python de `compi2026/laurasefue`, manteniendo nombres internos claros y comentarios en espanol para estudiar cada etapa.
 
-- Mostrar de manera clara como se hace el analisis lexico.
-- Servir como base para extender el lenguaje `frances`.
-- Permitir pruebas rapidas desde consola con un REPL sencillo.
-- Tener una implementacion legible para estudiar compiladores.
+## Estado actual
 
-## Flujo general
+El proyecto ya incluye:
 
-El funcionamiento del programa sigue este orden:
-
-1. `Program.cs` arranca la aplicacion y muestra el mensaje inicial.
-2. `Repl.cs` abre un ciclo interactivo con el prompt `>>`.
-3. El usuario escribe una linea de entrada.
-4. `Lexer.cs` recorre esa linea y va produciendo tokens.
-5. Cada token se imprime en consola hasta llegar a `EOF`.
-6. El proceso se repite hasta que el usuario escriba `salir()`.
-
-## Estructura del proyecto
-
-Los archivos principales son:
-
-- `Program.cs`: punto de entrada de la aplicacion.
-- `Repl.cs`: ciclo interactivo de lectura y visualizacion de tokens.
-- `Lexer.cs`: analizador lexico que recorre el texto y produce tokens.
-- `Token.cs`: representacion de un token individual.
-- `TokenType.cs`: enum con las categorias de token reconocidas. Sus miembros usan MAYUSCULAS para alinearse con el interprete Python base.
-- `TokenLookup.cs`: tabla para identificar palabras reservadas.
-- `compi2026-csharp.csproj`: configuracion del proyecto .NET.
+- Lexer completo.
+- Parser Pratt con precedencia de operadores.
+- AST completo para sentencias y expresiones.
+- Sistema de objetos runtime.
+- Environment con scopes anidados.
+- Evaluator tree-walking.
+- REPL evaluador.
+- Ejecucion de archivos `.hdp`.
+- Ejemplos en `examples/`.
 
 ## Requisitos
 
-Para ejecutar este proyecto necesitas:
+Necesitas:
 
 - .NET SDK 7.0 o compatible.
-- Terminal con acceso al comando `dotnet`.
+- Terminal con acceso a `dotnet`.
 
-Puedes verificar tu instalacion con:
+Verifica la instalacion:
 
 ```bash
 dotnet --version
 ```
 
-## Como ejecutar el proyecto
+## Como ejecutar
 
-Desde la carpeta padre `compiladores`:
+Desde la carpeta padre `compiladores`, iniciar el REPL:
 
 ```bash
 dotnet run --project compi2026-csharp
 ```
 
-O entrando directamente a la carpeta del proyecto:
+Ejecutar un archivo `.hdp`:
+
+```bash
+dotnet run --project compi2026-csharp -- compi2026-csharp/examples/test_script.hdp
+```
+
+Ejecutar el ejemplo completo:
+
+```bash
+dotnet run --project compi2026-csharp -- compi2026-csharp/examples/final.hdp
+```
+
+Tambien puedes entrar a la carpeta del proyecto y usar rutas relativas:
 
 ```bash
 cd compi2026-csharp
-dotnet run
+dotnet run -- examples/test_script.hdp
 ```
 
-Cuando el programa inicia, muestra:
+## REPL
+
+Si ejecutas el proyecto sin archivo, se abre un REPL:
 
 ```txt
-prueba "frances" el nuevo lenguaje de programacion
+prueba "frances" el nuevo lenguaje de programacion (.hdp)
+>> 
 ```
 
-Luego queda esperando entrada del usuario con el prompt:
+Comandos especiales:
+
+- `salir()` termina el REPL.
+- `ayuda()` muestra ejemplos rapidos.
+
+El REPL conserva el mismo `Environment` entre entradas:
 
 ```txt
->>
+>> let x = 10;
+>> print(x * 5);
+50
+>> let doble = function(n) { return n * 2; };
+>> doble(7);
+14
 ```
 
-## Como salir del REPL
+Para bloques con `{ ... }`, el REPL permite entrada multilinea mientras haya llaves abiertas.
 
-Para cerrar la ejecucion del lenguaje, escribe:
+## Ejemplos .hdp
+
+`examples/test_script.hdp`:
 
 ```txt
-salir()
+let x = 10;
+let y = 5;
+print("El resultado es:");
+print(x * y);
 ```
 
-Tambien se puede terminar cerrando la entrada estandar.
-
-## Ejemplo de uso
-
-Entrada:
+Salida esperada:
 
 ```txt
->>10 + 3 * 2 - 1
+El resultado es:
+50
 ```
 
-Salida:
+`examples/final.hdp` cubre aritmetica, strings, condicionales, ciclos, closures, factorial, fibonacci y negacion logica.
+
+## Estructura
+
+Archivos principales:
+
+- `Program.cs`: punto de entrada. Si recibe un path, ejecuta archivo; si no, abre el REPL.
+- `Runner.cs`: centraliza el pipeline `Lexer -> Parser -> Evaluator`.
+- `Repl.cs`: ciclo interactivo con environment persistente.
+- `Lexer.cs`: convierte texto fuente en tokens.
+- `Token.cs`: representa un token individual.
+- `TokenType.cs`: enum de tokens en MAYUSCULAS.
+- `TokenLookup.cs`: distingue keywords de identificadores.
+- `Parser.cs`: parser Pratt que construye el AST.
+- `Ast.cs`: nodos del arbol sintactico abstracto.
+- `ObjectSystem.cs`: valores runtime del lenguaje.
+- `Environment.cs`: tabla de simbolos con scopes anidados.
+- `Evaluator.cs`: interprete tree-walking que ejecuta el AST.
+
+## Flujo interno
+
+### 1. Program
+
+`Program.cs` decide el modo de ejecucion:
 
 ```txt
-Type INTEGER, Literal 10
-Type PLUS, Literal +
-Type INTEGER, Literal 3
-Type MULTIPLY, Literal *
-Type INTEGER, Literal 2
-Type MINUS, Literal -
-Type INTEGER, Literal 1
+con argumento    -> Runner.RunFile(path)
+sin argumentos   -> Repl.Start()
 ```
 
-Otro ejemplo:
+### 2. Runner
+
+`Runner.RunSource(...)` ejecuta el pipeline:
 
 ```txt
->>let valor == 10 != 20
-Type LET, Literal let
-Type IDENTIFIER, Literal valor
-Type EQ, Literal ==
-Type INTEGER, Literal 10
-Type DIF, Literal !=
-Type INTEGER, Literal 20
+Lexer(source)
+Parser(lexer)
+parser.ParseProgram()
+Evaluator.Evaluate(program, env)
 ```
 
-Otro ejemplo con keywords, flotantes y strings:
+Si hay errores de parseo, los escribe en `Console.Error`. Si hay errores runtime, imprime `Error en ejecucion`.
+
+### 3. Lexer
+
+`Lexer.NextToken()` lee caracter por caracter y produce tokens.
+
+Reconoce:
+
+- operadores: `+`, `-`, `*`, `/`, `%`, `^`
+- comparaciones: `==`, `!=`, `<`, `<=`, `>`, `>=`
+- logicos: `and`, `or`, `!`
+- delimitadores: `,`, `;`, `(`, `)`, `{`, `}`
+- literales: enteros, flotantes, strings, booleans
+- keywords: `function`, `let`, `return`, `if`, `elseif`, `else`, `while`, `for`, `break`, `continue`, `print`
+- comentarios de linea: `// comentario`
+
+### 4. Parser
+
+`Parser` convierte tokens en AST. Usa Pratt Parsing para expresiones, con precedencias:
 
 ```txt
->>print true and false or break 3.14 "hola"
-Type PRINT, Literal print
-Type TRUE, Literal true
-Type AND, Literal and
-Type FALSE, Literal false
-Type OR, Literal or
-Type BREAK, Literal break
-Type FLOAT, Literal 3.14
-Type STRING, Literal hola
+LOWEST
+OR
+AND
+EQUALS
+LESSGREATER
+SUM
+PRODUCT
+PREFIX
+POWER
+CALL
 ```
-
-## Tokens reconocidos actualmente
-
-El lexer ya reconoce las siguientes categorias:
-
-### Operadores simples
-
-- `+` -> `PLUS`
-- `-` -> `MINUS`
-- `*` -> `MULTIPLY`
-- `/` -> `DIVISION`
-- `%` -> `MOD`
-- `^` -> `POW`
-- `<` -> `LT`
-- `>` -> `GT`
-- `=` -> `ASSIGN`
-- `!` -> `NEGATION`
-
-### Operadores dobles
-
-- `==` -> `EQ`
-- `!=` -> `DIF`
-- `<=` -> `LTE`
-- `>=` -> `GTE`
-
-### Operadores logicos y booleanos
-
-- `and` -> `AND`
-- `or` -> `OR`
-- `true` -> `TRUE`
-- `false` -> `FALSE`
-
-### Delimitadores
-
-- `,` -> `COMMA`
-- `;` -> `SEMICOLON`
-- `(` -> `LPAREN`
-- `)` -> `RPAREN`
-- `{` -> `LBRACE`
-- `}` -> `RBRACE`
-
-### Literales
-
-- Enteros, por ejemplo: `10`, `25`, `300`
-- Flotantes, por ejemplo: `3.14`, `20.5`
-- Strings entre comillas dobles, por ejemplo: `"hola"`
-- Identificadores alfanumericos con guion bajo, por ejemplo: `x`, `valor`, `mi_variable1`
-
-### Palabras reservadas
-
-- `function`
-- `for`
-- `let`
-- `if`
-- `else`
-- `elseif`
-- `while`
-- `return`
-- `break`
-- `continue`
-- `print`
-
-### Tokens especiales
-
-- `EOF`: fin de entrada
-- `ILLEGAL`: simbolo no reconocido
-
-## Como funciona el lexer
-
-La clase `Lexer` mantiene cuatro piezas principales de estado:
-
-- `_source`: texto completo recibido como entrada.
-- `_character`: caracter actual que se esta analizando.
-- `_position`: posicion actual dentro del texto.
-- `_readPosition`: posicion del siguiente caracter por leer.
-
-Con ese estado, el lexer hace lo siguiente:
-
-1. Ignora espacios en blanco y comentarios de linea con `SkipWhiteSpacesAndComments()`.
-2. Observa el caracter actual.
-3. Decide si corresponde a:
-   - un operador de un caracter,
-   - un operador de dos caracteres,
-   - un numero entero o flotante,
-   - un string,
-   - un identificador o keyword,
-   - o un simbolo ilegal.
-4. Crea el token correspondiente.
-5. Avanza para preparar la siguiente lectura.
-
-## Comentarios soportados
-
-El lexer ignora comentarios de una sola linea que empiecen con `//`.
 
 Ejemplo:
 
 ```txt
-let x = 5; // esto no se tokeniza
+2 + 3 * 4
 ```
 
-En ese caso, solo se generan tokens para:
+se parsea como:
 
 ```txt
-let x = 5;
+2 + (3 * 4)
 ```
 
-## Como funciona el REPL
+### 5. AST
 
-La clase `Repl` implementa el ciclo interactivo del programa:
+`Ast.cs` define la estructura intermedia del programa.
 
-- imprime el prompt `>>`
-- lee una linea escrita por el usuario
-- crea un lexer nuevo para esa linea
-- solicita tokens uno por uno con `NextToken()`
-- imprime cada token hasta encontrar `Eof`
+Sentencias:
 
-Esto permite probar el lexer inmediatamente sin archivos intermedios.
+- `LetStatement`
+- `ReturnStatement`
+- `ExpressionStatement`
+- `PrintStatement`
+- `BlockStatement`
+- `WhileStatement`
+- `ForStatement`
+- `BreakStatement`
+- `ContinueStatement`
+
+Expresiones:
+
+- `Identifier`
+- `IntegerLiteral`
+- `FloatLiteral`
+- `StringLiteral`
+- `BooleanLiteral`
+- `PrefixExpression`
+- `InfixExpression`
+- `IfExpression`
+- `FunctionLiteral`
+- `CallExpression`
+
+### 6. Object System
+
+`ObjectSystem.cs` define los valores que existen en runtime:
+
+- `IntegerObject`
+- `FloatObject`
+- `BooleanObject`
+- `StringObject`
+- `NullObject`
+- `ReturnValueObject`
+- `ErrorObject`
+- `FunctionObject`
+- `BreakSignal`
+- `ContinueSignal`
+
+Tambien expone singletons reutilizables:
+
+```txt
+RuntimeObjects.TRUE
+RuntimeObjects.FALSE
+RuntimeObjects.NULL
+RuntimeObjects.BREAK
+RuntimeObjects.CONTINUE
+```
+
+### 7. Environment
+
+`Environment` guarda variables:
+
+```txt
+nombre -> RuntimeObject
+```
+
+Tambien permite scopes anidados para funciones y closures:
+
+```txt
+funcEnv.Get("x")
+  -> busca en funcEnv
+  -> si no existe, busca en outer
+```
+
+### 8. Evaluator
+
+`Evaluator.Evaluate(node, env)` recorre el AST.
+
+Soporta:
+
+- literales
+- variables con `let`
+- `print`
+- operadores prefijos `!` y `-`
+- operadores infijos
+- strings
+- `if / elseif / else`
+- `while`
+- `for`
+- `break`
+- `continue`
+- `return`
+- funciones
+- closures
+- recursividad
+
+## Sintaxis soportada
+
+Variables:
+
+```txt
+let x = 10;
+let nombre = "Laura";
+```
+
+Aritmetica:
+
+```txt
+2 + 3 * 4;
+17 % 5;
+2 ^ 8;
+```
+
+Condicionales:
+
+```txt
+if (x > 0) {
+    print("positivo");
+} elseif (x == 0) {
+    print("cero");
+} else {
+    print("negativo");
+}
+```
+
+While:
+
+```txt
+let i = 0;
+while (i < 5) {
+    let i = i + 1;
+    print(i);
+}
+```
+
+For:
+
+```txt
+for (let i = 1; i <= 5; let i = i + 1) {
+    print(i);
+}
+```
+
+Funciones:
+
+```txt
+let doble = function(n) {
+    return n * 2;
+};
+
+print(doble(7));
+```
+
+Closures:
+
+```txt
+let crear_multiplicador = function(factor) {
+    return function(x) {
+        return x * factor;
+    };
+};
+
+let triple = crear_multiplicador(3);
+print(triple(7));
+```
+
+Recursion:
+
+```txt
+let fact = function(n) {
+    if (n <= 1) { return 1; }
+    return n * fact(n - 1);
+};
+
+print(fact(5));
+```
+
+
+## Archivos generados
+
+No se deben versionar `bin/` ni `obj/`.
+
+El repo incluye `.gitignore` para ignorarlos:
+
+```gitignore
+bin/
+obj/
+```
+
+Estos directorios se regeneran automaticamente con:
+
+```bash
+dotnet build
+dotnet test
+dotnet run
+```
+

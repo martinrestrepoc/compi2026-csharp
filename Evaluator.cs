@@ -25,9 +25,14 @@ public static class Evaluator
         {
             ProgramNode program => EvalProgram(program, env),
             ExpressionStatement statement => Evaluate(statement.Expression, env),
+            BlockStatement statement => EvalBlockStatement(statement, env),
             LetStatement statement => EvalLetStatement(statement, env),
             ReturnStatement statement => EvalReturnStatement(statement, env),
             PrintStatement statement => EvalPrintStatement(statement, env),
+            WhileStatement statement => EvalWhileStatement(statement, env),
+            ForStatement statement => EvalForStatement(statement, env),
+            BreakStatement => RuntimeObjects.BREAK,
+            ContinueStatement => RuntimeObjects.CONTINUE,
 
             IntegerLiteral literal => new IntegerObject(literal.Value),
             FloatLiteral literal => new FloatObject(literal.Value),
@@ -36,6 +41,9 @@ public static class Evaluator
             Identifier identifier => EvalIdentifier(identifier, env),
             PrefixExpression expression => EvalPrefixExpression(expression, env),
             InfixExpression expression => EvalInfixExpression(expression, env),
+            IfExpression expression => EvalIfExpression(expression, env),
+            FunctionLiteral expression => new FunctionObject(expression.Parameters, expression.Body, env, expression.Name),
+            CallExpression expression => EvalCallExpression(expression, env),
 
             _ => NewError($"nodo no soportado todavia: {node.GetType().Name}")
         };
@@ -56,6 +64,27 @@ public static class Evaluator
             }
 
             if (result is ErrorObject)
+            {
+                return result;
+            }
+        }
+
+        return result;
+    }
+
+    // Evalua un bloque y propaga senales de control sin desenvolverlas.
+    private static RuntimeObject EvalBlockStatement(BlockStatement block, Environment env)
+    {
+        RuntimeObject result = RuntimeObjects.NULL;
+
+        foreach (var statement in block.Statements)
+        {
+            result = Evaluate(statement, env);
+
+            if (result.Type is ObjectType.RETURN
+                or ObjectType.ERROR
+                or ObjectType.BREAK
+                or ObjectType.CONTINUE)
             {
                 return result;
             }
@@ -94,6 +123,98 @@ public static class Evaluator
         }
 
         Console.WriteLine(value.Inspect());
+        return RuntimeObjects.NULL;
+    }
+
+    // Evalua while (<condicion>) { <cuerpo> }.
+    private static RuntimeObject EvalWhileStatement(WhileStatement statement, Environment env)
+    {
+        RuntimeObject result = RuntimeObjects.NULL;
+
+        while (true)
+        {
+            var condition = Evaluate(statement.Condition, env);
+            if (IsError(condition))
+            {
+                return condition;
+            }
+
+            if (!IsTruthy(condition))
+            {
+                break;
+            }
+
+            result = Evaluate(statement.Body, env);
+
+            if (ReferenceEquals(result, RuntimeObjects.BREAK))
+            {
+                return RuntimeObjects.NULL;
+            }
+
+            if (ReferenceEquals(result, RuntimeObjects.CONTINUE))
+            {
+                continue;
+            }
+
+            if (result is ReturnValueObject or ErrorObject)
+            {
+                return result;
+            }
+        }
+
+        return result is BreakSignal or ContinueSignal ? RuntimeObjects.NULL : result;
+    }
+
+    // Evalua for (<init>; <condicion>; <update>) { <cuerpo> }.
+    private static RuntimeObject EvalForStatement(ForStatement statement, Environment env)
+    {
+        if (statement.Init is not null)
+        {
+            var initResult = Evaluate(statement.Init, env);
+            if (IsError(initResult))
+            {
+                return initResult;
+            }
+        }
+
+        while (true)
+        {
+            if (statement.Condition is not null)
+            {
+                var condition = Evaluate(statement.Condition, env);
+                if (IsError(condition))
+                {
+                    return condition;
+                }
+
+                if (!IsTruthy(condition))
+                {
+                    break;
+                }
+            }
+
+            var result = Evaluate(statement.Body, env);
+
+            if (ReferenceEquals(result, RuntimeObjects.BREAK))
+            {
+                return RuntimeObjects.NULL;
+            }
+
+            if (result is ReturnValueObject or ErrorObject)
+            {
+                return result;
+            }
+
+            if (statement.Update is not null)
+            {
+                var updateResult = Evaluate(statement.Update, env);
+                if (IsError(updateResult))
+                {
+                    return updateResult;
+                }
+            }
+        }
+
         return RuntimeObjects.NULL;
     }
 
@@ -137,6 +258,109 @@ public static class Evaluator
         }
 
         return EvalInfixOperator(expression.Operator, left, right);
+    }
+
+    // Evalua if / elseif / else. Si ninguna rama aplica, retorna null.
+    private static RuntimeObject EvalIfExpression(IfExpression expression, Environment env)
+    {
+        var condition = Evaluate(expression.Condition, env);
+        if (IsError(condition))
+        {
+            return condition;
+        }
+
+        if (IsTruthy(condition))
+        {
+            return Evaluate(expression.Consequence, env);
+        }
+
+        foreach (var (alternativeCondition, alternativeBlock) in expression.Alternatives)
+        {
+            var alternativeValue = Evaluate(alternativeCondition, env);
+            if (IsError(alternativeValue))
+            {
+                return alternativeValue;
+            }
+
+            if (IsTruthy(alternativeValue))
+            {
+                return Evaluate(alternativeBlock, env);
+            }
+        }
+
+        return expression.ElseBlock is not null
+            ? Evaluate(expression.ElseBlock, env)
+            : RuntimeObjects.NULL;
+    }
+
+    // Evalua una llamada a funcion: funcion(arg1, arg2).
+    private static RuntimeObject EvalCallExpression(CallExpression expression, Environment env)
+    {
+        var function = Evaluate(expression.Function, env);
+        if (IsError(function))
+        {
+            return function;
+        }
+
+        if (function is not FunctionObject functionObject)
+        {
+            return NewError($"'{expression.Function}' no es una funcion, es {function.Type}");
+        }
+
+        var args = EvalExpressions(expression.Arguments, env);
+        if (args.Count == 1 && IsError(args[0]))
+        {
+            return args[0];
+        }
+
+        if (args.Count != functionObject.Parameters.Count)
+        {
+            return NewError(
+                $"numero de argumentos incorrecto: esperados {functionObject.Parameters.Count}, recibidos {args.Count}");
+        }
+
+        var functionEnv = ExtendFunctionEnv(functionObject, args);
+        var evaluated = Evaluate(functionObject.Body, functionEnv);
+
+        return UnwrapReturnValue(evaluated);
+    }
+
+    // Evalua argumentos de izquierda a derecha.
+    private static List<RuntimeObject> EvalExpressions(List<Expression> expressions, Environment env)
+    {
+        var result = new List<RuntimeObject>();
+
+        foreach (var expression in expressions)
+        {
+            var evaluated = Evaluate(expression, env);
+            if (IsError(evaluated))
+            {
+                return new List<RuntimeObject> { evaluated };
+            }
+
+            result.Add(evaluated);
+        }
+
+        return result;
+    }
+
+    // Crea un entorno hijo y enlaza parametros con argumentos.
+    private static Environment ExtendFunctionEnv(FunctionObject function, List<RuntimeObject> args)
+    {
+        var env = Environment.NewEnclosedEnvironment(function.Env);
+
+        for (var i = 0; i < function.Parameters.Count; i += 1)
+        {
+            env.Set(function.Parameters[i].Value, args[i]);
+        }
+
+        return env;
+    }
+
+    // El cuerpo de una funcion retorna ReturnValueObject; la llamada expone solo el valor real.
+    private static RuntimeObject UnwrapReturnValue(RuntimeObject obj)
+    {
+        return obj is ReturnValueObject returnValue ? returnValue.Value : obj;
     }
 
     // Implementa negacion logica con las reglas de truthiness del lenguaje.
