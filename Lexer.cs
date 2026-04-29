@@ -31,140 +31,98 @@ public sealed class Lexer
 
         Token token;
 
-        if (string.IsNullOrEmpty(_character))
+        switch (_character)
         {
             // No hay mas caracteres por leer.
-            token = new Token(TokenType.EOF, string.Empty);
-        }
-        else if (_character == "+")
-        {
-            // Operador suma.
-            token = new Token(TokenType.PLUS, _character);
-        }
-        else if (_character == ">")
-        {
-            // Operador mayor que o mayor o igual que.
-            if (PeekCharacter() == "=")
-            {
-                token = MakeTwoCharacterToken(TokenType.GTE);
-            }
-            else
-            {
-                token = new Token(TokenType.GT, _character);
-            }
-        }
-        else if (_character == "-")
-        {
-            // Operador resta.
-            token = new Token(TokenType.MINUS, _character);
-        }
-        else if (_character == "^")
-        {
-            // Operador potencia.
-            token = new Token(TokenType.POW, _character);
-        }
-        else if (_character == "*")
-        {
-            // Operador multiplicacion.
-            token = new Token(TokenType.MULTIPLY, _character);
-        }
-        else if (_character == "/")
-        {
-            // Operador division. Los comentarios // se saltan antes.
-            token = new Token(TokenType.DIVISION, _character);
-        }
-        else if (_character == "%")
-        {
-            // Operador modulo.
-            token = new Token(TokenType.MOD, _character);
-        }
-        else if (_character == "!" && PeekCharacter() == "=")
-        {
-            // Operador de diferencia: !=
-            token = MakeTwoCharacterToken(TokenType.DIF);
-        }
-        else if (_character == "!")
-        {
-            // Operador de negacion.
-            token = new Token(TokenType.NEGATION, _character);
-        }
-        else if (_character == "=" && PeekCharacter() == "=")
-        {
-            // Operador de igualdad: ==
-            token = MakeTwoCharacterToken(TokenType.EQ);
-        }
-        else if (_character == "=")
-        {
-            // Operador de asignacion.
-            token = new Token(TokenType.ASSIGN, _character);
-        }
-        else if (_character == "<" && PeekCharacter() == "=")
-        {
-            // Operador menor o igual que: <=
-            token = MakeTwoCharacterToken(TokenType.LTE);
-        }
-        else if (_character == "<")
-        {
-            // Operador menor que.
-            token = new Token(TokenType.LT, _character);
-        }
-        else if (_character == ",")
-        {
-            // Separador de argumentos o elementos.
-            token = new Token(TokenType.COMMA, _character);
-        }
-        else if (_character == ";")
-        {
-            // Delimitador de fin de sentencia.
-            token = new Token(TokenType.SEMICOLON, _character);
-        }
-        else if (_character == "(")
-        {
-            // Parentesis de apertura.
-            token = new Token(TokenType.LPAREN, _character);
-        }
-        else if (_character == ")")
-        {
-            // Parentesis de cierre.
-            token = new Token(TokenType.RPAREN, _character);
-        }
-        else if (_character == "{")
-        {
-            // Llave de apertura.
-            token = new Token(TokenType.LBRACE, _character);
-        }
-        else if (_character == "}")
-        {
-            // Llave de cierre.
-            token = new Token(TokenType.RBRACE, _character);
-        }
-        else if (_character == "\"")
-        {
-            // Cadena encerrada entre comillas dobles.
-            token = new Token(TokenType.STRING, ReadString());
-            return token;
-        }
-        else if (IsLetter(_character))
-        {
-            // Si empieza con letra o _, puede ser identificador o keyword. 
-            var literal = ReadIdentifier();
-            token = new Token(TokenLookup.LookupTokenType(literal), literal);
-            return token;
-        }
-        else if (IsDigit(_character))
-        {
-            // Si empieza con digito, consume entero o flotante. 
-            var (literal, tokenType) = ReadNumber();
-            token = new Token(tokenType, literal);
-            return token;
-        }
-        else if (_character == "\"")
-        {
-            // Cualquier simbolo desconocido se marca como ilegal.
-            token = new Token(TokenType.Illegal, _character);
-        }
+            case "":
+                token = new Token(TokenType.EOF, string.Empty);
+                break;
 
+            // Operadores aritmeticos simples.
+            case "+":
+                token = new Token(TokenType.PLUS, _character);
+                break;
+            case "-":
+                token = new Token(TokenType.MINUS, _character);
+                break;
+            case "^":
+                token = new Token(TokenType.POW, _character);
+                break;
+            case "*":
+                token = new Token(TokenType.MULTIPLY, _character);
+                break;
+            case "/":
+                token = new Token(TokenType.DIVISION, _character);
+                break;
+            case "%":
+                token = new Token(TokenType.MOD, _character);
+                break;
 
+            // Operadores de uno o dos caracteres.
+            case ">":
+                token = PeekCharacter() == "="
+                    ? MakeTwoCharacterToken(TokenType.GTE)
+                    : new Token(TokenType.GT, _character);
+                break;
+            case "!":
+                token = PeekCharacter() == "="
+                    ? MakeTwoCharacterToken(TokenType.DIF)
+                    : new Token(TokenType.NEGATION, _character);
+                break;
+            case "=":
+                token = PeekCharacter() == "="
+                    ? MakeTwoCharacterToken(TokenType.EQ)
+                    : new Token(TokenType.ASSIGN, _character);
+                break;
+            case "<":
+                token = PeekCharacter() == "="
+                    ? MakeTwoCharacterToken(TokenType.LTE)
+                    : new Token(TokenType.LT, _character);
+                break;
+
+            // Delimitadores.
+            case ",":
+                token = new Token(TokenType.COMMA, _character);
+                break;
+            case ";":
+                token = new Token(TokenType.SEMICOLON, _character);
+                break;
+            case "(":
+                token = new Token(TokenType.LPAREN, _character);
+                break;
+            case ")":
+                token = new Token(TokenType.RPAREN, _character);
+                break;
+            case "{":
+                token = new Token(TokenType.LBRACE, _character);
+                break;
+            case "}":
+                token = new Token(TokenType.RBRACE, _character);
+                break;
+
+            // Literales compuestos: estos metodos ya avanzan el cursor.
+            case "\"":
+                token = new Token(TokenType.STRING, ReadString());
+                return token;
+
+            default:
+                if (IsLetter(_character))
+                {
+                    var literal = ReadIdentifier();
+                    token = new Token(TokenLookup.LookupTokenType(literal), literal);
+                    return token;
+                }
+
+                if (IsDigit(_character))
+                {
+                    var (literal, tokenType) = ReadNumber();
+                    token = new Token(tokenType, literal);
+                    return token;
+                }
+
+                token = new Token(TokenType.ILLEGAL, _character);
+                break;
+        }
 
         // Avanza para dejar listo el siguiente analisis.
         ReadCharacter();
