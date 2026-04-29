@@ -5,7 +5,7 @@ namespace frances;
 public static class Repl
 {
     // Token de referencia para detectar el fin del analisis.
-    private static readonly Token EofToken = new(TokenType.Eof, string.Empty);
+    private static readonly Token EofToken = new(TokenType.EOF, string.Empty);
 
     // Inicia el ciclo interactivo del lenguaje.
     public static void Start()

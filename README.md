@@ -32,7 +32,7 @@ Los archivos principales son:
 - `Repl.cs`: ciclo interactivo de lectura y visualizacion de tokens.
 - `Lexer.cs`: analizador lexico que recorre el texto y produce tokens.
 - `Token.cs`: representacion de un token individual.
-- `TokenType.cs`: enum con las categorias de token reconocidas.
+- `TokenType.cs`: enum con las categorias de token reconocidas. Sus miembros usan MAYUSCULAS para alinearse con el interprete Python base.
 - `TokenLookup.cs`: tabla para identificar palabras reservadas.
 - `compi2026-csharp.csproj`: configuracion del proyecto .NET.
 
@@ -97,39 +97,39 @@ Entrada:
 Salida:
 
 ```txt
-Type Integer, Literal 10
-Type Plus, Literal +
-Type Integer, Literal 3
-Type Multiply, Literal *
-Type Integer, Literal 2
-Type Minus, Literal -
-Type Integer, Literal 1
+Type INTEGER, Literal 10
+Type PLUS, Literal +
+Type INTEGER, Literal 3
+Type MULTIPLY, Literal *
+Type INTEGER, Literal 2
+Type MINUS, Literal -
+Type INTEGER, Literal 1
 ```
 
 Otro ejemplo:
 
 ```txt
 >>let valor == 10 != 20
-Type Let, Literal let
-Type Identifier, Literal valor
-Type Eq, Literal ==
-Type Integer, Literal 10
-Type Dif, Literal !=
-Type Integer, Literal 20
+Type LET, Literal let
+Type IDENTIFIER, Literal valor
+Type EQ, Literal ==
+Type INTEGER, Literal 10
+Type DIF, Literal !=
+Type INTEGER, Literal 20
 ```
 
 Otro ejemplo con keywords, flotantes y strings:
 
 ```txt
 >>print true and false or break 3.14 "hola"
-Type Print, Literal print
-Type True, Literal true
-Type And, Literal and
-Type False, Literal false
-Type Or, Literal or
-Type Break, Literal break
-Type Float, Literal 3.14
-Type String, Literal hola
+Type PRINT, Literal print
+Type TRUE, Literal true
+Type AND, Literal and
+Type FALSE, Literal false
+Type OR, Literal or
+Type BREAK, Literal break
+Type FLOAT, Literal 3.14
+Type STRING, Literal hola
 ```
 
 ## Tokens reconocidos actualmente
@@ -138,39 +138,39 @@ El lexer ya reconoce las siguientes categorias:
 
 ### Operadores simples
 
-- `+` -> `Plus`
-- `-` -> `Minus`
-- `*` -> `Multiply`
-- `/` -> `Division`
-- `%` -> `Mod`
-- `^` -> `Pow`
-- `<` -> `Lt`
-- `>` -> `Gt`
-- `=` -> `Assign`
-- `!` -> `Negation`
+- `+` -> `PLUS`
+- `-` -> `MINUS`
+- `*` -> `MULTIPLY`
+- `/` -> `DIVISION`
+- `%` -> `MOD`
+- `^` -> `POW`
+- `<` -> `LT`
+- `>` -> `GT`
+- `=` -> `ASSIGN`
+- `!` -> `NEGATION`
 
 ### Operadores dobles
 
-- `==` -> `Eq`
-- `!=` -> `Dif`
-- `<=` -> `Lte`
-- `>=` -> `Gte`
+- `==` -> `EQ`
+- `!=` -> `DIF`
+- `<=` -> `LTE`
+- `>=` -> `GTE`
 
 ### Operadores logicos y booleanos
 
-- `and` -> `And`
-- `or` -> `Or`
-- `true` -> `True`
-- `false` -> `False`
+- `and` -> `AND`
+- `or` -> `OR`
+- `true` -> `TRUE`
+- `false` -> `FALSE`
 
 ### Delimitadores
 
-- `,` -> `Comma`
-- `;` -> `Semicolon`
-- `(` -> `LParen`
-- `)` -> `RParen`
-- `{` -> `LBrace`
-- `}` -> `RBrace`
+- `,` -> `COMMA`
+- `;` -> `SEMICOLON`
+- `(` -> `LPAREN`
+- `)` -> `RPAREN`
+- `{` -> `LBRACE`
+- `}` -> `RBRACE`
 
 ### Literales
 
@@ -195,8 +195,8 @@ El lexer ya reconoce las siguientes categorias:
 
 ### Tokens especiales
 
-- `Eof`: fin de entrada
-- `Illegal`: simbolo no reconocido
+- `EOF`: fin de entrada
+- `ILLEGAL`: simbolo no reconocido
 
 ## Como funciona el lexer
 

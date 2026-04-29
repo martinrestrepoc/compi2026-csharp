@@ -7,21 +7,21 @@ public static class TokenLookup
     // Tabla de palabras clave reconocidas por el lexer.
     private static readonly Dictionary<string, TokenType> Keywords = new(StringComparer.Ordinal)
     {
-        ["function"] = TokenType.Function,
-        ["for"] = TokenType.For,
-        ["let"] = TokenType.Let,
-        ["if"] = TokenType.If,
-        ["else"] = TokenType.Else,
-        ["elseif"] = TokenType.ElseIf,
-        ["while"] = TokenType.While,
-        ["return"] = TokenType.Return,
-        ["break"] = TokenType.Break,
-        ["continue"] = TokenType.Continue,
-        ["true"] = TokenType.True,
-        ["false"] = TokenType.False,
-        ["and"] = TokenType.And,
-        ["or"] = TokenType.Or,
-        ["print"] = TokenType.Print
+        ["function"] = TokenType.FUNCTION,
+        ["for"] = TokenType.FOR,
+        ["let"] = TokenType.LET,
+        ["if"] = TokenType.IF,
+        ["else"] = TokenType.ELSE,
+        ["elseif"] = TokenType.ELSEIF,
+        ["while"] = TokenType.WHILE,
+        ["return"] = TokenType.RETURN,
+        ["break"] = TokenType.BREAK,
+        ["continue"] = TokenType.CONTINUE,
+        ["true"] = TokenType.TRUE,
+        ["false"] = TokenType.FALSE,
+        ["and"] = TokenType.AND,
+        ["or"] = TokenType.OR,
+        ["print"] = TokenType.PRINT
     };
 
     // Devuelve el tipo reservado si existe; si no, Identifier.
@@ -34,7 +34,7 @@ public static class TokenLookup
         }
         else
         {
-            return TokenType.Identifier;
+            return TokenType.IDENTIFIER;
         }
     }
 }

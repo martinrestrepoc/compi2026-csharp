@@ -1,58 +1,68 @@
 namespace frances;
 
 // Enum con todos los tipos de token que puede producir el lexer.
+//
+// Los nombres se mantienen en MAYUSCULAS para seguir el estilo del
+// interprete Python original y dejar una convencion estable para las
+// siguientes etapas: parser, AST, evaluator y sistema de objetos.
 public enum TokenType
 {
     // Operadores aritmeticos
-    Division,
-    Assign,
-    Comma,
-    Dif,
-    Eq,
-    Gt,
-    Gte,
-    Lt,
-    Lte,
-    Plus,
-    Minus,
-    Negation,
-    Pow,
-    Multiply,
-    Mod,
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    DIVISION,
+    MOD,
+    POW,
 
-    // Operadores logicos y booleanos
-    And,
-    Or,
+    // Operadores de comparacion
+    EQ,
+    DIF,
+    LT,
+    LTE,
+    GT,
+    GTE,
 
-    // Delimitadores
-    LParen,
-    RParen,
-    LBrace,
-    RBrace,
-    Semicolon,
+    // Operadores logicos
+    AND,
+    OR,
+    NEGATION,
 
-    // Literales
-    Identifier,
-    Integer,
-    Float,
-    String,
-    True,
-    False,
+    // Operador de asignacion
+    ASSIGN,
 
-    // Keywords
-    Function,
-    Let,
-    If,
-    Else,
-    ElseIf,
-    For,
-    While,
-    Return,
-    Break,
-    Continue,
-    Print,
+    // Delimitadores y puntuacion
+    COMMA,
+    SEMICOLON,
+    LPAREN,
+    RPAREN,
+    LBRACE,
+    RBRACE,
 
-    // Especiales
-    Eof,
-    Illegal
+    // Tipos de datos literales
+    INTEGER,
+    FLOAT,
+    STRING,
+    TRUE,
+    FALSE,
+
+    // Identificadores
+    IDENTIFIER,
+
+    // Palabras reservadas
+    FUNCTION,
+    LET,
+    RETURN,
+    IF,
+    ELSEIF,
+    ELSE,
+    WHILE,
+    FOR,
+    BREAK,
+    CONTINUE,
+    PRINT,
+
+    // Tokens especiales
+    EOF,
+    ILLEGAL
 }
